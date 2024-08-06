@@ -1,0 +1,26 @@
+const Sequelize = require('sequelize');
+const sequelize = require('../config/database');
+
+const User = require('./user')(sequelize, Sequelize);
+const Chicken = require('./chicken')(sequelize, Sequelize);
+const Egg = require('./egg')(sequelize, Sequelize);
+const Feed = require('./feed')(sequelize, Sequelize);
+const Translation = require('./translation')(sequelize, Sequelize);
+
+User.hasMany(Chicken, { foreignKey: 'user_id' });
+Chicken.belongsTo(User, { foreignKey: 'user_id' });
+
+User.hasMany(Egg, { foreignKey: 'user_id' });
+Egg.belongsTo(User, { foreignKey: 'user_id' });
+
+User.hasMany(Feed, { foreignKey: 'user_id' });
+Feed.belongsTo(User, { foreignKey: 'user_id' });
+
+module.exports = {
+    sequelize,
+    User,
+    Chicken,
+    Egg,
+    Feed,
+    Translation,
+};
