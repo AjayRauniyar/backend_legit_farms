@@ -7,7 +7,8 @@ module.exports = {
         username: process.env.DB_USER,
         password: process.env.DB_PASS,
         host: process.env.DB_HOST,
-        dialect: 'mysql',
+        port: process.env.DB_PORT,
+        dialect: process.env.dialect,
     },
     jwtSecret: process.env.JWT_SECRET,
     otp: {
