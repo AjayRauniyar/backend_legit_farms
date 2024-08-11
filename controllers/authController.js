@@ -14,18 +14,25 @@ const sendOTP = async (req, res) => {
 const verifyOtpAndFetchUser = async (req, res) => {
     const { sessionId, otp, mobileNumber } = req.body;
 
-    const result = await otpService.verifyOTP(sessionId, otp);
-    if (!result.success) {
-        return res.status(400).json({ error: 'Invalid OTP', message: result.message });
+    // Verify OTP using the 2factor service
+    const otpResult = await otpService.verifyOTP(sessionId, otp);
+    if (!otpResult.success) {
+        return res.status(400).json({ error: 'Invalid OTP', message: otpResult.message });
     }
 
-    // Fetch user details from the database
-    const user = await User.findOne({ where: { number: mobileNumber } });
-    if (!user) {
-        return res.status(404).json({ error: 'User not found. Please contact Leggit Farms.' });
-    }
+    try {
+        // Fetch user details from the AWS-hosted database
+        const user = await User.findOne({ where: { number: mobileNumber } });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found. Please contact Leggit Farms.' });
+        }
 
-    res.json(user);
+        // Respond with the user data
+        res.json({ success: true, user });
+    } catch (error) {
+        console.error(`Error fetching user: ${error.message}`);
+        return res.status(500).json({ error: 'Internal server error', message: 'Failed to fetch user details' });
+    }
 };
 
 module.exports = {
