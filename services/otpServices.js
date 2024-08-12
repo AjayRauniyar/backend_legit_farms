@@ -1,5 +1,5 @@
 const axios = require('axios');
-
+const { User } = require('../models');
 const config = require('../config/config');
 
 const sendOTP = async (mobileNumber) => {
@@ -55,27 +55,9 @@ const verifyOTP = async (sessionId, otpEntered) => {
         };
     }
 };
-const verifyOtpAndFetchUser = async (req, res) => {
-    const { sessionId, otp, mobileNumber } = req.body;
-
-    // Verify OTP - this is a placeholder function
-    const isOtpValid = await verifyOTP(sessionId, otp);
-    if (!isOtpValid) {
-        return res.status(400).json({ error: 'Invalid OTP' });
-    }
-
-    // Fetch user details from the database
-    const user = await User.findOne({ where: { number: mobileNumber } });
-    if (!user) {
-        return res.status(404).json({ error: 'User not found. Please contact Leggit Farms.' });
-    }
-
-    res.json(user);
-};
 
 
 module.exports = {
     sendOTP,
     verifyOTP,
-    verifyOtpAndFetchUser
 };

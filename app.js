@@ -10,6 +10,10 @@ const config = require('./config/config');
 const app = express();
 
 app.use(bodyParser.json());
+app.use(express.json());
+
+// Middleware to parse URL-encoded bodies (from HTML forms, etc.)
+app.use(express.urlencoded({ extended: true }));
 app.use('/api/admin', adminRoutes);
 app.use('/api/beneficiary', beneficiaryRoutes);
 app.use('/api/auth', authRoutes);

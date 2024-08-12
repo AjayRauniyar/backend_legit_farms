@@ -1,4 +1,4 @@
-const { User, Chicken, Egg, Feed } = require('../models');
+const { User } = require('../models');
 
 const getAllBeneficiaries = async (req, res) => {
     try {
