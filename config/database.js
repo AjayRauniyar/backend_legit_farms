@@ -8,7 +8,7 @@ const sequelize = new Sequelize(
     {
         host: config.db.host,
         port: config.db.port,
-        dialect: config.db.dialect,
+        dialect: "postgres",
         dialectOptions: {
             ssl: {
                 require: true, // This will enforce SSL connection if your database requires it
