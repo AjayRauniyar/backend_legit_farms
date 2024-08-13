@@ -1,36 +1,8 @@
 const AWS = require('aws-sdk');
 const uuid = require('uuid').v4;
 const config =require('../config/config')
-const { Chicken, Egg, Feed, User } = require('../models');
+const {Feed, Chicken, Egg,  User } = require('../models');
 
-const getFarmDetails = async (req, res) => {
-    try {
-        const farmDetails = await Chicken.findAll({ where: { user_id: req.user.id } });
-        res.json(farmDetails);
-    } catch (error) {
-        res.status(500).send(error.message);
-    }
-};
-
-const trackEggProduction = async (req, res) => {
-    try {
-        const { date, quantity } = req.body;
-        const eggProduction = await Egg.create({ user_id: req.user.id, date, quantity });
-        res.json(eggProduction);
-    } catch (error) {
-        res.status(500).send(error.message);
-    }
-};
-
-const trackFeedIntake = async (req, res) => {
-    try {
-        const { feed_type, feed_date, projected_qty, actual_qty } = req.body;
-        const feedIntake = await Feed.create({ user_id: req.user.id, feed_type, feed_date, projected_qty, actual_qty });
-        res.json(feedIntake);
-    } catch (error) {
-        res.status(500).send(error.message);
-    }
-};
 
 const getUserDetails = async (req, res) => {
     try {
@@ -131,13 +103,135 @@ const updateUserDetails = async (req, res) => {
         res.status(500).send({ error: 'Error updating user details.' });
     }
 };
+// upto here to fetch the user details and update the user details
+// below is the code for the getuserdetails for chicken,eggs and feed of the beneficiary user
+// Function to get user-related details including chickens, eggs, and feed based on userId
+const getUserDetailsById = async (req, res) => {
+    const userId = req.params.userId;
+    try {
+        const user = await User.findByPk(userId, {
+            include: [Chicken, Egg, Feed]
+        });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+const updateChickens = async (req, res) => {
+    const userId = req.params.userId;
+    const { start_date, male_count, female_count, culling_log } = req.body;
+
+    try {
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found. Default chicken data will not be created.' });
+        }
+
+        let chicken = await Chicken.findOne({ where: { user_id: userId } });
+
+        if (!chicken) {
+            chicken = await Chicken.create({
+                user_id: userId,
+                start_date: start_date || new Date(),
+                male_count: male_count || 0,
+                female_count: female_count || 0,
+                culling_log: culling_log || ''
+            });
+        } else {
+            chicken.start_date = start_date || chicken.start_date;
+            chicken.male_count = male_count || chicken.male_count;
+            chicken.female_count = female_count || chicken.female_count;
+            chicken.culling_log = culling_log || chicken.culling_log;
+
+            await chicken.save();
+        }
+
+        res.json(chicken);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+
+
+const updateEggs = async (req, res) => {
+    const userId = req.params.userId;
+    const { date, quantity } = req.body;
+
+    try {
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found. Default egg data will not be created.' });
+        }
+
+        let egg = await Egg.findOne({ where: { user_id: userId } });
+
+        if (!egg) {
+            egg = await Egg.create({
+                user_id: userId,
+                date: date || new Date(),
+                quantity: quantity || 0
+            });
+        } else {
+            egg.date = date || egg.date;
+            egg.quantity = quantity || egg.quantity;
+
+            await egg.save();
+        }
+
+        res.json(egg);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+
+const updateFeed = async (req, res) => {
+    const userId = req.params.userId;
+    const { feed_type, feed_date, projected_qty, actual_qty } = req.body;
+
+    try {
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found. Default feed data will not be created.' });
+        }
+
+        let feed = await Feed.findOne({ where: { user_id: userId } });
+
+        if (!feed) {
+            feed = await Feed.create({
+                user_id: userId,
+                feed_type: feed_type || 'Unknown',
+                feed_date: feed_date || new Date(),
+                projected_qty: projected_qty || 0,
+                actual_qty: actual_qty || 0
+            });
+        } else {
+            feed.feed_type = feed_type || feed.feed_type;
+            feed.feed_date = feed_date || feed.feed_date;
+            feed.projected_qty = projected_qty || feed.projected_qty;
+            feed.actual_qty = actual_qty || feed.actual_qty;
+
+            await feed.save();
+        }
+
+        res.json(feed);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
 
 
 
 module.exports = {
-    getFarmDetails,
-    trackEggProduction,
-    trackFeedIntake,
     getUserDetails,
     updateUserDetails,
+    getUserDetailsById,
+    updateChickens,
+    updateEggs,
+    updateFeed
 };
