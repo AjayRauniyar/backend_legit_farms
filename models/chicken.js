@@ -9,9 +9,9 @@ module.exports = (sequelize, DataTypes) => {
             }
         },
         start_date: DataTypes.DATE,
-        male_count: DataTypes.INTEGER,
-        female_count: DataTypes.INTEGER,
-        culling_log: DataTypes.TEXT
+        total_count: DataTypes.INTEGER,
+        culling_log: DataTypes.INTEGER,
+        death_disease: DataTypes.INTEGER
     }, {
         tableName: 'Chickens',
         timestamps: true, // Explicitly specify the table name

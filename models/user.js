@@ -13,6 +13,10 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING,
             defaultValue: 'No Information',
         },
+        district: {
+            type: DataTypes.STRING,
+            defaultValue: 'No Information',
+        },
         role: DataTypes.STRING,
         crp: {
             type: DataTypes.STRING,

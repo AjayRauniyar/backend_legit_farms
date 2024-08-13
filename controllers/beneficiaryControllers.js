@@ -123,12 +123,12 @@ const getUserDetailsById = async (req, res) => {
 
 const updateChickens = async (req, res) => {
     const userId = req.params.userId;
-    const { start_date, male_count, female_count, culling_log } = req.body;
+    const { start_date, total_count, culling_log, death_disease } = req.body;
 
     try {
         const user = await User.findByPk(userId);
         if (!user) {
-            return res.status(404).json({ error: 'User not found. Default chicken data will not be created.' });
+            return res.status(404).json({ error: 'User not found. Chicken data will not be created.' });
         }
 
         let chicken = await Chicken.findOne({ where: { user_id: userId } });
@@ -137,22 +137,23 @@ const updateChickens = async (req, res) => {
             chicken = await Chicken.create({
                 user_id: userId,
                 start_date: start_date || new Date(),
-                male_count: male_count || 0,
-                female_count: female_count || 0,
-                culling_log: culling_log || ''
+                total_count: total_count || 0,
+                culling_log: culling_log || 0,
+                death_disease: death_disease || 0
             });
         } else {
             chicken.start_date = start_date || chicken.start_date;
-            chicken.male_count = male_count || chicken.male_count;
-            chicken.female_count = female_count || chicken.female_count;
-            chicken.culling_log = culling_log || chicken.culling_log;
+            chicken.total_count = total_count !== undefined ? total_count : chicken.total_count;
+            chicken.culling_log = culling_log !== undefined ? culling_log : chicken.culling_log;
+            chicken.death_disease = death_disease !== undefined ? death_disease : chicken.death_disease;
 
             await chicken.save();
         }
 
         res.json(chicken);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error(error);
+        res.status(500).json({ error: 'An error occurred while updating the chicken data.' });
     }
 };
 
@@ -189,42 +190,39 @@ const updateEggs = async (req, res) => {
     }
 };
 
-
 const updateFeed = async (req, res) => {
     const userId = req.params.userId;
-    const { feed_type, feed_date, projected_qty, actual_qty } = req.body;
+    const { feed_date, quantity } = req.body;
 
     try {
         const user = await User.findByPk(userId);
         if (!user) {
-            return res.status(404).json({ error: 'User not found. Default feed data will not be created.' });
+            return res.status(404).json({ error: 'User not found. Feed data will not be created.' });
         }
 
         let feed = await Feed.findOne({ where: { user_id: userId } });
 
         if (!feed) {
+            // If feed data for the user does not exist, create a new entry
             feed = await Feed.create({
                 user_id: userId,
-                feed_type: feed_type || 'Unknown',
                 feed_date: feed_date || new Date(),
-                projected_qty: projected_qty || 0,
-                actual_qty: actual_qty || 0
+                quantity: quantity || 0
             });
         } else {
-            feed.feed_type = feed_type || feed.feed_type;
+            // If feed data for the user exists, update the entry
             feed.feed_date = feed_date || feed.feed_date;
-            feed.projected_qty = projected_qty || feed.projected_qty;
-            feed.actual_qty = actual_qty || feed.actual_qty;
+            feed.quantity = quantity !== undefined ? quantity : feed.quantity;
 
             await feed.save();
         }
 
         res.json(feed);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error(error);
+        res.status(500).json({ error: 'An error occurred while updating the feed data.' });
     }
 };
-
 // Function to create or update vaccine details for a user
 const updateVaccine = async (req, res) => {
     const userId = req.params.userId;

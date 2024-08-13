@@ -8,10 +8,9 @@ module.exports = (sequelize, DataTypes) => {
                 key: 'id'
             }
         },
-        feed_type: DataTypes.STRING,
         feed_date: DataTypes.DATE,
-        projected_qty: DataTypes.INTEGER,
-        actual_qty: DataTypes.INTEGER
+        quantity: DataTypes.INTEGER,
+        
     },{
         tableName: 'Feeds', // Explicitly specify the table name
     });
