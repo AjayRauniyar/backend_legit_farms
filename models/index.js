@@ -5,6 +5,8 @@ const User = require('./user')(sequelize, Sequelize);
 const Chicken = require('./chicken')(sequelize, Sequelize);
 const Egg = require('./egg')(sequelize, Sequelize);
 const Feed = require('./feed')(sequelize, Sequelize);
+const Vaccine = require('./vaccine')(sequelize, Sequelize); 
+
 const Translation = require('./translation')(sequelize, Sequelize);
 
 User.hasMany(Chicken, { foreignKey: 'user_id' });
@@ -16,6 +18,9 @@ Egg.belongsTo(User, { foreignKey: 'user_id' });
 User.hasMany(Feed, { foreignKey: 'user_id' });
 Feed.belongsTo(User, { foreignKey: 'user_id' });
 
+User.hasMany(Vaccine, { foreignKey: 'user_id' }); // Define relationship between User and Vaccine
+Vaccine.belongsTo(User, { foreignKey: 'user_id' });
+
 module.exports = {
     sequelize,
     User,
@@ -23,4 +28,5 @@ module.exports = {
     Egg,
     Feed,
     Translation,
+    Vaccine,
 };

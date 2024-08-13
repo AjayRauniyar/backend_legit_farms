@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk');
 const uuid = require('uuid').v4;
 const config =require('../config/config')
-const {Feed, Chicken, Egg,  User } = require('../models');
+const {Feed, Chicken, Egg,  User ,Vaccine} = require('../models');
 
 
 const getUserDetails = async (req, res) => {
@@ -110,7 +110,7 @@ const getUserDetailsById = async (req, res) => {
     const userId = req.params.userId;
     try {
         const user = await User.findByPk(userId, {
-            include: [Chicken, Egg, Feed]
+            include: [Chicken, Egg, Feed, Vaccine]
         });
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
@@ -225,6 +225,40 @@ const updateFeed = async (req, res) => {
     }
 };
 
+// Function to create or update vaccine details for a user
+const updateVaccine = async (req, res) => {
+    const userId = req.params.userId;
+    const { vaccine_name, date } = req.body;
+
+    try {
+        // Check if the user exists
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found. Vaccine data will not be created.' });
+        }
+
+        // Check if a vaccine record exists for this user with the same vaccine name
+        let vaccine = await Vaccine.findOne({ where: { user_id: userId, vaccine_name: vaccine_name } });
+
+        if (!vaccine) {
+            // Create a new vaccine record if it doesn't exist
+            vaccine = await Vaccine.create({
+                user_id: userId,
+                vaccine_name: vaccine_name,
+                date: date || new Date()
+            });
+        } else {
+            // Update the existing vaccine record
+            vaccine.date = date || vaccine.date;
+            await vaccine.save();
+        }
+
+        res.json(vaccine);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 
 
 module.exports = {
@@ -233,5 +267,6 @@ module.exports = {
     getUserDetailsById,
     updateChickens,
     updateEggs,
-    updateFeed
+    updateFeed,
+    updateVaccine
 };

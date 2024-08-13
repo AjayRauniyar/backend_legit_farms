@@ -15,4 +15,7 @@ router.put('/:userId/chickens', beneficiaryController.updateChickens);
 router.put('/:userId/eggs', beneficiaryController.updateEggs);
 router.put('/:userId/feed', beneficiaryController.updateFeed);
 
+// Route to create or update vaccine records for a user
+router.put('/:userId/vaccines',  beneficiaryController.updateVaccine);
+
 module.exports = router;
