@@ -16,8 +16,8 @@ jobs:
           node-version: 20
       - name: Install Dependencies
         run: npm install
-      - name: Genrate Deployment Package
-        run: zip -r backend_legit_farms.zip
+      - name: Generate Deployment Package
+        run: zip -r backend_legit_farms.zip . -x '*.git*'
       - name: Deploy to EB
         uses: einaregilsson/beanstalk-deploy@v22
         with:
