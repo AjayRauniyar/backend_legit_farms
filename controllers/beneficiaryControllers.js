@@ -112,13 +112,53 @@ const getUserDetailsById = async (req, res) => {
     const userId = req.params.userId;
     try {
             // set the cuurent date and subtract 4 days to define the range of the data output
-        const fourDaysAgo = moment().subtract(4, 'days').toDate();
+      
         const user = await User.findByPk(userId, {
             include: [
                 { model: Chicken, as: 'Chickens' },
                 { model: Egg, as: 'Eggs' },
-                { model: Feed, as: 'Feeds' },
-                Vaccine,Medicine,
+                { model: Feed, as: 'Feeds' }
+            ]
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+const getVaccinesAndMedicines = async (req, res) => {
+    const userId = req.params.userId;
+    try {
+        const user = await User.findByPk(userId, {
+            include: [
+                { model: Vaccine, as: 'Vaccines' },
+                { model: Medicine, as: 'Medicines' }
+            ]
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json({
+            vaccines: user.Vaccines,
+            medicines: user.Medicines
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+const getAuditData = async (req, res) => {
+    const userId = req.params.userId;
+    try {
+        const fourDaysAgo = moment().subtract(4, 'days').toDate();
+
+        const user = await User.findByPk(userId, {
+            include: [
                 { 
                     model: EggAudit, 
                     as: 'EggAudits', 
@@ -127,7 +167,7 @@ const getUserDetailsById = async (req, res) => {
                             [Op.gte]: fourDaysAgo
                         }
                     },
-                    required: false  // Allows fetching users even if no recent audit data exists
+                    required: false
                 },
                 { 
                     model: FeedAudit, 
@@ -149,7 +189,6 @@ const getUserDetailsById = async (req, res) => {
                     },
                     required: false
                 }
-                
             ]
         });
 
@@ -157,11 +196,17 @@ const getUserDetailsById = async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        res.json(user);
+        res.json({
+            eggAudits: user.EggAudits,
+            feedAudits: user.FeedAudits,
+            chickenAudits: user.ChickenAudits
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
+
 
 
 const updateChickens = async (req, res) => {
@@ -339,6 +384,8 @@ module.exports = {
     getUserDetails,
     updateUserDetails,
     getUserDetailsById,
+    getVaccinesAndMedicines,
+    getAuditData,
     updateChickens,
     updateEggs,
     updateFeed,

@@ -11,6 +11,14 @@ router.get('/user-details', beneficiaryController.getUserDetails);
 router.put('/update-user', upload.single('picture'),  beneficiaryController.updateUserDetails);
 
 router.get('/:userId', beneficiaryController.getUserDetailsById);
+
+// Route to get vaccines and medicines for a specific user
+router.get('/:userId/vaccines-medicines', beneficiaryController.getVaccinesAndMedicines);
+
+// Route to get audit data (EggAudit, FeedAudit, ChickenAudit) for a specific user
+router.get('/:userId/audit-data', beneficiaryController.getAuditData);
+
+
 router.put('/:userId/chickens', beneficiaryController.updateChickens);
 router.put('/:userId/eggs', beneficiaryController.updateEggs);
 router.put('/:userId/feed', beneficiaryController.updateFeed);
