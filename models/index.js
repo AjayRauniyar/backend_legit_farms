@@ -6,7 +6,7 @@ const Chicken = require('./chicken')(sequelize, Sequelize);
 const Egg = require('./egg')(sequelize, Sequelize);
 const Feed = require('./feed')(sequelize, Sequelize);
 const Vaccine = require('./vaccine')(sequelize, Sequelize); 
-
+const Medicine = require('./medicine')(sequelize, Sequelize); 
 
 const EggAudit = require('./eggAudit')(sequelize, Sequelize);
 const FeedAudit = require('./feedAudit')(sequelize, Sequelize);
@@ -27,6 +27,9 @@ Feed.belongsTo(User, { foreignKey: 'user_id' });
 
 User.hasMany(Vaccine, { foreignKey: 'user_id' }); // Define relationship between User and Vaccine
 Vaccine.belongsTo(User, { foreignKey: 'user_id' });
+
+User.hasMany(Medicine, { foreignKey: 'user_id' }); // Define relationship between User and Vaccine
+Medicine.belongsTo(User, { foreignKey: 'user_id' });
 
 // Set up relationships for audit tables
 User.hasMany(EggAudit, { foreignKey: 'user_id', as: 'EggAudits' });
@@ -50,6 +53,7 @@ module.exports = {
     Feed,
     Translation,
     Vaccine,
+    Medicine,
     EggAudit,
     FeedAudit,
     ChickenAudit

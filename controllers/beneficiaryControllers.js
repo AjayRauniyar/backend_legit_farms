@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk');
 const uuid = require('uuid').v4;
 const config =require('../config/config')
-const {Feed, Chicken, Egg,  User ,Vaccine,EggAudit,ChickenAudit,FeedAudit} = require('../models');
+const {Feed, Chicken, Egg,  User ,Vaccine,EggAudit,ChickenAudit,FeedAudit, Medicine} = require('../models');
 const { Op } = require('sequelize');
 const moment = require('moment');
 
@@ -118,7 +118,7 @@ const getUserDetailsById = async (req, res) => {
                 { model: Chicken, as: 'Chickens' },
                 { model: Egg, as: 'Eggs' },
                 { model: Feed, as: 'Feeds' },
-                Vaccine,
+                Vaccine,Medicine,
                 { 
                     model: EggAudit, 
                     as: 'EggAudits', 
@@ -299,6 +299,39 @@ const updateVaccine = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+const updateMedicine = async (req, res) => {
+    const userId = req.params.userId;
+    const { medicine_name, date } = req.body;
+
+    try {
+        // Check if the user exists
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found.Medicine data will not be created.' });
+        }
+
+        // Check if a vaccine record exists for this user with the same vaccine name
+        let medicine = await Medicine.findOne({ where: { user_id: userId, medicine_name: medicine_name } });
+
+        if (!medicine) {
+            // Create a new vaccine record if it doesn't exist
+            medicine = await Medicine.create({
+                user_id: userId,
+                medicine_name: medicine_name,
+                date: date || new Date()
+            });
+        } else {
+            // Update the existing vaccine record
+            medicine.date = date || medicine.date;
+            await medicine.save();
+        }
+
+        res.json(medicine);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 
 
 
@@ -309,5 +342,6 @@ module.exports = {
     updateChickens,
     updateEggs,
     updateFeed,
-    updateVaccine
+    updateVaccine,
+    updateMedicine,
 };
