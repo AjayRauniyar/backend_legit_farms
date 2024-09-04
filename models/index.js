@@ -8,9 +8,9 @@ const Feed = require('./feed')(sequelize, Sequelize);
 const Vaccine = require('./vaccine')(sequelize, Sequelize); 
 const Medicine = require('./medicine')(sequelize, Sequelize); 
 
-const EggAudit = require('./eggAudit')(sequelize, Sequelize);
-const FeedAudit = require('./feedAudit')(sequelize, Sequelize);
-const ChickenAudit = require('./chickenAudit')(sequelize, Sequelize);
+const EggAudit = require('./EggAudit')(sequelize, Sequelize);
+const FeedAudit = require('./FeedAudit')(sequelize, Sequelize);
+const ChickenAudit = require('./ChickenAudit')(sequelize, Sequelize);
 
 
 
