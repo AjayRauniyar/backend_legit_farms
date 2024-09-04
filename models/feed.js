@@ -15,5 +15,10 @@ module.exports = (sequelize, DataTypes) => {
         tableName: 'Feeds', // Explicitly specify the table name
     });
 
+    Feed.associate = function(models) {
+        Feed.belongsTo(models.User, { foreignKey: 'user_id' });
+    };
+    
+
     return Feed;
 };

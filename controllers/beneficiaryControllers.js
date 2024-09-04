@@ -1,7 +1,9 @@
 const AWS = require('aws-sdk');
 const uuid = require('uuid').v4;
 const config =require('../config/config')
-const {Feed, Chicken, Egg,  User ,Vaccine} = require('../models');
+const {Feed, Chicken, Egg,  User ,Vaccine,EggAudit,ChickenAudit,FeedAudit} = require('../models');
+const { Op } = require('sequelize');
+const moment = require('moment');
 
 
 const getUserDetails = async (req, res) => {
@@ -105,21 +107,62 @@ const updateUserDetails = async (req, res) => {
 };
 // upto here to fetch the user details and update the user details
 // below is the code for the getuserdetails for chicken,eggs and feed of the beneficiary user
-// Function to get user-related details including chickens, eggs, and feed based on userId
+// Function to get user-related details including chickens, eggs, and feed based on userId    include: [Chicken, Egg, Feed, Vaccine]
 const getUserDetailsById = async (req, res) => {
     const userId = req.params.userId;
     try {
+            // set the cuurent date and subtract 4 days to define the range of the data output
+        const fourDaysAgo = moment().subtract(4, 'days').toDate();
         const user = await User.findByPk(userId, {
-            include: [Chicken, Egg, Feed, Vaccine]
+            include: [
+                { model: Chicken, as: 'Chickens' },
+                { model: Egg, as: 'Eggs' },
+                { model: Feed, as: 'Feeds' },
+                Vaccine,
+                { 
+                    model: EggAudit, 
+                    as: 'EggAudits', 
+                    where: {
+                        date: {
+                            [Op.gte]: fourDaysAgo
+                        }
+                    },
+                    required: false  // Allows fetching users even if no recent audit data exists
+                },
+                { 
+                    model: FeedAudit, 
+                    as: 'FeedAudits', 
+                    where: {
+                        feed_date: {
+                            [Op.gte]: fourDaysAgo
+                        }
+                    },
+                    required: false
+                },
+                { 
+                    model: ChickenAudit, 
+                    as: 'ChickenAudits', 
+                    where: {
+                        start_date: {
+                            [Op.gte]: fourDaysAgo
+                        }
+                    },
+                    required: false
+                }
+                
+            ]
         });
+
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
+
         res.json(user);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
 
 const updateChickens = async (req, res) => {
     const userId = req.params.userId;

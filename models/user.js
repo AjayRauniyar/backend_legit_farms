@@ -46,5 +46,14 @@ module.exports = (sequelize, DataTypes) => {
         },
     });
 
+    User.associate = function(models) {
+        User.hasMany(models.Egg, { foreignKey: 'user_id' });
+        User.hasMany(models.Chicken, { foreignKey: 'user_id' });
+        User.hasMany(models.Feed, { foreignKey: 'user_id' });
+        User.hasMany(models.EggAudit, { foreignKey: 'user_id', as: 'EggAudits' });
+    };
+    
+
+
     return User;
 };

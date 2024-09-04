@@ -16,6 +16,9 @@ module.exports = (sequelize, DataTypes) => {
         tableName: 'Chickens',
         timestamps: true, // Explicitly specify the table name
     });
+    Chicken.associate = function(models) {
+        Chicken.belongsTo(models.User, { foreignKey: 'user_id' });
+    };
 
     return Chicken;
 };

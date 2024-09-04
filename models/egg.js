@@ -13,6 +13,11 @@ module.exports = (sequelize, DataTypes) => {
     },{
         tableName: 'Eggs', // Explicitly specify the table name
     });
+    
+    Egg.associate = function(models) {
+        Egg.belongsTo(models.User, { foreignKey: 'user_id' });
+    };
+    
 
     return Egg;
 };
