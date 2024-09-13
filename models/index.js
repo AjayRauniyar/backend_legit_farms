@@ -42,7 +42,9 @@ FeedAudit.belongsTo(User, { foreignKey: 'user_id' });
 User.hasMany(ChickenAudit, { foreignKey: 'user_id', as: 'ChickenAudits' });
 ChickenAudit.belongsTo(User, { foreignKey: 'user_id' });
 
-
+//crp admin export
+const Crptable = require('./crp/Crptable')(sequelize, Sequelize.DataTypes);
+const FeedOrder = require('./crp/FeedOrder')(sequelize, Sequelize.DataTypes);
 
 
 module.exports = {
@@ -56,6 +58,8 @@ module.exports = {
     Medicine,
     EggAudit,
     FeedAudit,
-    ChickenAudit
+    ChickenAudit,
+    Crptable,
+    FeedOrder
     
 };
