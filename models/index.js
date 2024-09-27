@@ -44,7 +44,9 @@ ChickenAudit.belongsTo(User, { foreignKey: 'user_id' });
 
 //crp admin export
 const Crptable = require('./crp/Crptable')(sequelize, Sequelize.DataTypes);
+const CrpFeedOrder = require('./crp/CrpFeedOrder')(sequelize, Sequelize.DataTypes);
 const FeedOrder = require('./crp/FeedOrder')(sequelize, Sequelize.DataTypes);
+const EggOrder = require('./crp/EggOrder')(sequelize, Sequelize.DataTypes);
 
 
 module.exports = {
@@ -60,6 +62,8 @@ module.exports = {
     FeedAudit,
     ChickenAudit,
     Crptable,
-    FeedOrder
+    FeedOrder,
+    EggOrder,
+    CrpFeedOrder
     
 };

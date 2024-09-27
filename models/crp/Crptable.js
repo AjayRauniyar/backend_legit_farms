@@ -14,11 +14,16 @@ module.exports = (sequelize, DataTypes) => {
         },
         phone_number: {
             type: DataTypes.STRING(15),
-            allowNull: false
+            allowNull: false,
+            unique:true
         },
         picture: {
             type: DataTypes.TEXT,
             allowNull: true
+        },
+        feedquantity: { // Add new feedQuantity field
+            type: DataTypes.INTEGER, // Assuming the quantity is an integer
+            allowNull: false // Set as required
         }
     }, {
         tableName: 'crp_table',

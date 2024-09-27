@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk');
 const uuid = require('uuid').v4;
 const config = require('../config/config');
-const { Crptable ,User,Chicken,FeedOrder} = require('../models'); // Assuming CrpTable is defined in models
+const { Crptable ,User,Chicken,FeedOrder,EggOrder,CrpFeedOrder} = require('../models'); // Assuming CrpTable is defined in models
 const { Op } = require('sequelize');
 
 // AWS S3 Configuration
@@ -12,6 +12,38 @@ AWS.config.update({
 });
 
 const s3 = new AWS.S3();
+
+// Function to update feed quantity by crp_id
+const updateCrpFeedQuantity = async (req, res) => {
+    const { crp_id, feedquantity } = req.body; // Expecting crp_id and feedQuantity in the request body
+
+    // Validate inputs
+    if (!crp_id || typeof feedquantity !== 'number') {
+        return res.status(400).json({ error: 'crp_id is required and feedQuantity must be a number.' });
+    }
+
+    try {
+        // Find the record by crp_id
+        const order = await Crptable.findOne({ where: { crp_id } });
+
+        // Check if the record exists
+        if (!order) {
+            return res.status(404).json({ error: 'Feed order not found for the given crp_id.' });
+        }
+
+        // Update the feedQuantity
+        order.feedquantity = feedquantity; // Set new value
+
+        // Save the updated order
+        await order.save();
+
+        // Respond with the updated order
+        return res.status(200).json({ message: 'Feed quantity updated successfully.', order });
+    } catch (error) {
+        console.error('Error updating feed quantity:', error);
+        return res.status(500).json({ error: 'An error occurred while updating the feed quantity.' });
+    }
+};
 
 // Function to fetch CRP details by mobile number
 const getCrpDetailsByMobile = async (req, res) => {
@@ -145,6 +177,44 @@ const getBeneficiaryDetails = async (req, res) => {
         return res.status(500).json({ error: 'Error fetching user details.' });
     }
 };
+const createCrpFeedOrderController = async (req, res) => {
+    try {
+        // Extract data from the request body or query parameters
+        const crpId = req.body.crp_id || req.query.crp_id;
+        const phoneNumber = req.body.phone_number || req.query.phone_number;
+        const feedOrderDate = req.body.feed_order_date || new Date(); // Default to current date if not provided
+        const feedDeliveryDate = req.body.feed_delivery_date || null;
+        const feedReceivedDate = req.body.feed_received_date || null;
+        const received = req.body.received || req.query.received || false; // Default to false if not provided
+        const feedQuantity = req.body.feedquantity || req.query.feedquantity;
+
+        // Validate that the required data is provided
+        if (!crpId || !phoneNumber || !feedOrderDate) {
+            return res.status(400).json({ message: 'crp_id, phone_number, and feed_order_date are required.' });
+        }
+
+        // Create a new CrpFeedOrder
+        const crpFeedOrder = await CrpFeedOrder.create({
+            crp_id: crpId,
+            phone_number: phoneNumber,
+            feed_order_date: feedOrderDate, // Current date if not provided
+            feed_delivery_date: feedDeliveryDate,
+            feed_received_date: feedReceivedDate,
+            received: received ,// Default value
+            feedquantity: feedQuantity
+        });
+
+        // Send the created CrpFeedOrder back as the response
+        return res.status(201).json({
+            crpFeedOrder: crpFeedOrder
+        });
+
+    } catch (error) {
+        console.error('Error creating Crp Feed Order:', error);
+        return res.status(500).json({ error: 'Failed to create Crp Feed Order.' });
+    }
+};
+
 
 const createFeedOrderController = async (req, res) => {
     try {
@@ -181,6 +251,44 @@ const createFeedOrderController = async (req, res) => {
     } catch (error) {
         console.error('Error creating feed order:', error);
         return res.status(500).json({ error: 'Failed to create feed order.' });
+    }
+};
+
+const createEggOrderController = async (req, res) => {
+    try {
+        // Extract data from the request body or query parameters
+        const crpId = req.body.crp_id || req.query.crp_id;
+        const beneficiaryPhoneNumber = req.body.beneficiary_phone_number || req.query.beneficiary_phone_number;
+        const quantity = req.body.quantity || req.query.quantity;
+        const received = req.body.received || req.query.received || false; // Default to false if not provided
+        const delivered = req.body.delivered || req.query.delivered || false; // Default to false if not provided
+
+
+        // Validate that the required data is provided
+        if (!crpId || !beneficiaryPhoneNumber || !quantity) {
+            return res.status(400).json({ message: 'crp_id, beneficiary_phone_number, and quantity are required.' });
+        }
+        //set the current timestamp for recieved_date or delivery_date  
+     
+        // Create a new feed order
+        const eggOrder = await EggOrder.create({
+            crp_id: crpId,
+            date: new Date(), // Current date
+            beneficiary_phone_number: beneficiaryPhoneNumber,
+            quantity: quantity,
+            received: received,  // Default value
+            delivered: delivered  // Default value
+        });
+
+        // Send the created feed order back as the response
+        return res.status(201).json({
+         
+            eggOrder: eggOrder
+        });
+
+    } catch (error) {
+        console.error('Error creating egg order:', error);
+        return res.status(500).json({ error: 'Failed to create egg order.' });
     }
 };
 
@@ -224,9 +332,12 @@ const getBeneficiaryFeedDetails = async (req, res) => {
     }
 };
 module.exports = {
+    updateCrpFeedQuantity,
     getCrpDetailsByMobile,
+    createCrpFeedOrderController,
     updateCrpPictureByMobile,
     getBeneficiaryDetails,
     createFeedOrderController,
+    createEggOrderController,
     getBeneficiaryFeedDetails
 };
