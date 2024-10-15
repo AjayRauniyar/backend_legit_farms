@@ -7,8 +7,11 @@ const beneficiaryRoutes = require('./routes/beneficiaryRoutes');
 const authRoutes = require('./routes/authRoutes');
 const errorMiddleware = require('./middlewares/errorMiddleware');
 const config = require('./config/config');
+const cors = require('cors');
+
 
 const app = express();
+app.use(cors());
 
 app.use(bodyParser.json());
 app.use(express.json());

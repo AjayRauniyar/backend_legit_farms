@@ -1,4 +1,4 @@
-const { sequelize,AdminTable,Chicken,EggAudit,FeedAudit,Egg,Feed,CrpFeedOrder, Crptable,EggOrder,FeedOrder, ChickenAudit} = require('../models'); // Assuming CrpTable is defined in models
+const { sequelize,AdminTable,Chicken,EggAudit,FeedAudit,Egg,Feed,CrpFeedOrder, Crptable,EggOrder,FeedOrder, ChickenAudit,User} = require('../models'); // Assuming CrpTable is defined in models
 const moment = require('moment');
 const { Op } = require('sequelize');
 
@@ -20,6 +20,34 @@ const getAdminDetailsByMobile = async (req, res) => {
     } catch (error) {
         console.error('Error fetching Admin details:', error);
         res.status(500).json({ error: 'Error fetching Admin details.' });
+    }
+};
+// Function to find a user by their number
+const getBeneficiaryByNumber = async (req,res) => {
+    try {
+        const number = req.query.number || req.body.number;
+
+        // Ensure number is provided
+        if (!number) {
+            return res.status(400).json({ message: "Missing required query parameter: number" });
+        }
+        // Find user by number
+        const user = await User.findOne({
+            where: {
+                number: number, // Search condition
+            },
+            attributes: ['name', 'number'], // Only return name and number
+        });
+
+        // Check if user exists
+        if (!user) {
+            return res.status(404).json({ message: "Beneficiary not found" });
+        }
+
+        res.json(user);// Return the user object
+    } catch (error) {
+        console.error('Error fetching user by number:', error);
+        res.status(500).json({ error: 'Error fetching beneficiary details.' });
     }
 };
 const getTotalCountBeneficiary = async (req, res) => {
@@ -351,6 +379,7 @@ const getTotalCountselectedDateCrp = async (req, res) => {
 
 module.exports = {
     getAdminDetailsByMobile,
+    getBeneficiaryByNumber,
     getTotalCountBeneficiary,
     getAllDateQuantitiesBeneficiary,
     getUnreceivedFeedOrdersCrp,

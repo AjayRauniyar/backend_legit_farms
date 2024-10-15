@@ -1,5 +1,5 @@
 const express = require('express');
-const {getAdminDetailsByMobile,getTotalCountBeneficiary,getAllDateQuantitiesBeneficiary,getUnreceivedFeedOrdersCrp,getTotalCountCrp,getTotalCountSelectedDateBeneficiary,getTotalCountselectedDateCrp} = require('../controllers/mainAdminControllers');
+const {getAdminDetailsByMobile,getBeneficiaryByNumber,getTotalCountBeneficiary,getAllDateQuantitiesBeneficiary,getUnreceivedFeedOrdersCrp,getTotalCountCrp,getTotalCountSelectedDateBeneficiary,getTotalCountselectedDateCrp} = require('../controllers/mainAdminControllers');
 const authMiddleware = require('../middlewares/authMiddleware');
 const multer = require('multer');
 
@@ -8,6 +8,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 
 router.get('/details', getAdminDetailsByMobile);
+router.get('/beneficiarynumber',getBeneficiaryByNumber)
 router.get('/totalcount', getTotalCountBeneficiary);
 router.get('/date-quantities', getAllDateQuantitiesBeneficiary);
 router.get('/feed-orders-crp', getUnreceivedFeedOrdersCrp);
