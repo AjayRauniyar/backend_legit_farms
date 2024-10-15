@@ -1,4 +1,4 @@
-const AWS = require('aws-sdk');
+const { S3 } = require('@aws-sdk/client-s3');
 const uuid = require('uuid').v4;
 const config =require('../config/config')
 const {Feed, Chicken, Egg,  User ,Vaccine,EggAudit,ChickenAudit,FeedAudit, Medicine} = require('../models');
@@ -27,13 +27,13 @@ const getUserDetails = async (req, res) => {
 };
 
 // Configure AWS SDK
-AWS.config.update({
-    accessKeyId: config.s3.accessKeyId,
-    secretAccessKey: config.s3.secretAccessKey,
+const s3 = new S3({
+    credentials: {
+        accessKeyId: config.s3.accessKeyId,
+        secretAccessKey: config.s3.secretAccessKey,
+    },
     region: config.s3.region,
 });
-
-const s3 = new AWS.S3();
 
 const deleteOldImage = async (oldPictureUrl) => {
     if (oldPictureUrl) {

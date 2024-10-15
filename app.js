@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const { sequelize } = require('./models');
+const mainAdmin =require('./routes/mainAdminRoutes')
 const adminRoutes = require('./routes/adminRoutes');
 const beneficiaryRoutes = require('./routes/beneficiaryRoutes');
 const authRoutes = require('./routes/authRoutes');
@@ -14,6 +15,7 @@ app.use(express.json());
 
 // Middleware to parse URL-encoded bodies (from HTML forms, etc.)
 app.use(express.urlencoded({ extended: true }));
+app.use('/api/mainadmin', mainAdmin);
 app.use('/api/admin', adminRoutes);
 app.use('/api/beneficiary', beneficiaryRoutes);
 app.use('/api/auth', authRoutes);

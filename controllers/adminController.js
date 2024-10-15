@@ -1,17 +1,17 @@
-const AWS = require('aws-sdk');
+const { S3 } = require('@aws-sdk/client-s3');
 const uuid = require('uuid').v4;
 const config = require('../config/config');
 const { Crptable ,User,Chicken,FeedOrder,EggOrder,CrpFeedOrder} = require('../models'); // Assuming CrpTable is defined in models
 const { Op } = require('sequelize');
 
 // AWS S3 Configuration
-AWS.config.update({
-    accessKeyId: config.s3.accessKeyId,
-    secretAccessKey: config.s3.secretAccessKey,
+const s3 = new S3({
+    credentials: {
+        accessKeyId: config.s3.accessKeyId,
+        secretAccessKey: config.s3.secretAccessKey,
+    },
     region: config.s3.region,
 });
-
-const s3 = new AWS.S3();
 
 // Function to update feed quantity by crp_id
 const updateCrpFeedQuantity = async (req, res) => {

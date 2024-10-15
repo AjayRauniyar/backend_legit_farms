@@ -45,8 +45,15 @@ ChickenAudit.belongsTo(User, { foreignKey: 'user_id' });
 //crp admin export
 const Crptable = require('./crp/Crptable')(sequelize, Sequelize.DataTypes);
 const CrpFeedOrder = require('./crp/CrpFeedOrder')(sequelize, Sequelize.DataTypes);
+// Inside CrpFeedOrder model
+Crptable.hasMany(CrpFeedOrder, { foreignKey: 'crp_id' });
+CrpFeedOrder.belongsTo(Crptable, { foreignKey: 'crp_id' });
+
+
 const FeedOrder = require('./crp/FeedOrder')(sequelize, Sequelize.DataTypes);
 const EggOrder = require('./crp/EggOrder')(sequelize, Sequelize.DataTypes);
+
+const AdminTable=require('./admin/AdminTable')(sequelize,Sequelize.DataTypes);
 
 
 module.exports = {
@@ -64,6 +71,7 @@ module.exports = {
     Crptable,
     FeedOrder,
     EggOrder,
-    CrpFeedOrder
+    CrpFeedOrder,
+    AdminTable
     
 };

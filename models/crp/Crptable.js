@@ -30,5 +30,11 @@ module.exports = (sequelize, DataTypes) => {
         timestamps: false
     });
 
+    Crptable.associate = (models) => {
+        Crptable.hasMany(models.CrpFeedOrder, {
+            foreignKey: 'crp_id'
+        });
+    };
+
     return Crptable;
 };

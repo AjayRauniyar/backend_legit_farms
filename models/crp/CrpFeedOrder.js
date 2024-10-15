@@ -46,5 +46,12 @@ module.exports = (sequelize, DataTypes) => {
         timestamps: false
     });
 
+    CrpFeedOrder.associate = (models) => {
+        CrpFeedOrder.belongsTo(models.Crptable, {
+            foreignKey: 'crp_id',
+            targetKey: 'crp_id'
+        });
+    };
+
     return CrpFeedOrder;
 };
