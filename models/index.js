@@ -14,6 +14,7 @@ const ChickenAudit = require('./ChickenAudit')(sequelize, Sequelize);
 
 
 
+
 const Translation = require('./translation')(sequelize, Sequelize);
 
 User.hasMany(Chicken, { foreignKey: 'user_id' });
@@ -56,6 +57,9 @@ const EggOrder = require('./crp/EggOrder')(sequelize, Sequelize.DataTypes);
 const AdminTable=require('./admin/AdminTable')(sequelize,Sequelize.DataTypes);
 
 
+const testuser = require('./testuser')(sequelize, Sequelize);
+
+
 module.exports = {
     sequelize,
     User,
@@ -72,6 +76,7 @@ module.exports = {
     FeedOrder,
     EggOrder,
     CrpFeedOrder,
-    AdminTable
+    AdminTable,
+    testuser
     
 };
