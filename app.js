@@ -100,6 +100,12 @@ app.post('/request-otp', async (req, res) => {
   if (existingUser) {
     return res.status(400).json({ message: 'User already exists with this email' });
   }
+   // Password strength validation
+  if (!passwordStrengthRegex.test(password)) {
+    return res.status(400).json({
+      message: 'Password must be at least 8 characters long, contain one uppercase letter, one number, and one special character.',
+    });
+  }
 
   // Generate OTP (6-digit number)
   const otp = Math.floor(100000 + Math.random() * 900000); // OTP of 6 digits
@@ -134,13 +140,7 @@ app.post('/verify-otp', async (req, res) => {
     return res.status(400).json({ message: 'Email, OTP, username, and password are required' });
   }
 
-  // Password strength validation
-  if (!passwordStrengthRegex.test(password)) {
-    return res.status(400).json({
-      message: 'Password must be at least 8 characters long, contain one uppercase letter, one number, and one special character.',
-    });
-  }
-
+  
   // Check if OTP exists for the email
   if (!otps[email]) {
     return res.status(400).json({ message: 'No OTP requested for this email' });
