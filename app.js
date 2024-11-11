@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const { sequelize } = require('./models');
 const mainAdmin =require('./routes/mainAdminRoutes')
@@ -9,6 +10,7 @@ const authRoutes = require('./routes/authRoutes');
 const errorMiddleware = require('./middlewares/errorMiddleware');
 const config = require('./config/config');
 const cors = require('cors');
+const bcrypt = require('bcrypt');
 const { testuser } = require('./models');
 
 
@@ -59,16 +61,120 @@ const generateToken = (user) => {
   return jwt.sign({ id: user.id, username: user.username }, config.jwtSecret, { expiresIn: '1h' });
 };
 
-// Signup Route
-app.post('/signup', async (req, res) => {
-  const { username, email, password } = req.body;
-  try {
-    const user = await testuser.create({ username, email, password });
-    const token = generateToken(user);
-    res.status(201).json({ message: 'Signup successful', token });
-  } catch (error) {
-    console.error(error);
-    res.status(400).json({ message: 'Error during signup', error });
+const axios = require('axios');
+
+
+// In-memory store to temporarily store OTPs
+let otps = {};
+
+// Configure the SMTP transporter (example using Gmail)
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'winningaj77@gmail.com', // Replace with your email
+    pass: 'gpzymaylvwniccao', // Replace with your email password or App password
+  },
+});
+
+// Password strength validation (at least 8 chars, 1 uppercase, 1 number, 1 special char)
+const passwordStrengthRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+// Email validation regex
+const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+
+// Route to request OTP
+app.post('/request-otp', async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required' });
+  }
+
+  // Validate email format
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: 'Invalid email format' });
+  }
+
+  // Check if the user already exists in the database
+  const existingUser = await User.findOne({ where: { email } });
+  if (existingUser) {
+    return res.status(400).json({ message: 'User already exists with this email' });
+  }
+
+  // Generate OTP (6-digit number)
+  const otp = Math.floor(100000 + Math.random() * 900000); // OTP of 6 digits
+
+  // Save the OTP with email as key (you can add expiry time)
+  otps[email] = {
+    otp: otp,
+    timestamp: Date.now(),
+  };
+
+  // Send the OTP email
+  const mailOptions = {
+    from: 'winningaj77@gmail.com',
+    to: email,
+    subject: 'Your OTP Code',
+    text: `Your OTP code is: ${otp}`,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      return res.status(500).json({ message: 'Error sending OTP email', error });
+    }
+    res.status(200).json({ message: 'OTP sent successfully', email: email });
+  });
+});
+
+// Route to verify OTP and create a user in the database if OTP is valid
+app.post('/verify-otp', async (req, res) => {
+  const { email, otp, username, password } = req.body;
+
+  if (!email || !otp || !username || !password) {
+    return res.status(400).json({ message: 'Email, OTP, username, and password are required' });
+  }
+
+  // Password strength validation
+  if (!passwordStrengthRegex.test(password)) {
+    return res.status(400).json({
+      message: 'Password must be at least 8 characters long, contain one uppercase letter, one number, and one special character.',
+    });
+  }
+
+  // Check if OTP exists for the email
+  if (!otps[email]) {
+    return res.status(400).json({ message: 'No OTP requested for this email' });
+  }
+
+  // Check if the OTP has expired (5 minutes expiry)
+  const otpData = otps[email];
+  const expirationTime = 5 * 60 * 1000; // 5 minutes in milliseconds
+  if (Date.now() - otpData.timestamp > expirationTime) {
+    delete otps[email]; // OTP expired
+    return res.status(400).json({ message: 'OTP expired' });
+  }
+
+  // Ensure OTP is compared correctly (convert both to strings)
+  if (String(otpData.otp) === String(otp)) {
+    // OTP is valid, create user in the database
+    try {
+      // Hash the password before storing it
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      // Create user in the database
+      const user = await User.create({ username, email, password: hashedPassword });
+
+      // OTP is valid, clear OTP after successful verification
+      delete otps[email];
+
+      return res.status(200).json({ message: 'OTP verified and user created successfully', user });
+    } catch (error) {
+      return res.status(500).json({ message: 'Error creating user', error });
+    }
+  } else {
+    // OTP is invalid
+    return res.status(400).json({ message: 'Invalid OTP' });
   }
 });
 
