@@ -96,7 +96,7 @@ app.post('/request-otp', async (req, res) => {
   }
 
   // Check if the user already exists in the database
-  const existingUser = await User.findOne({ where: { email } });
+  const existingUser = await testuser.findOne({ where: { email } });
   if (existingUser) {
     return res.status(400).json({ message: 'User already exists with this email' });
   }
@@ -163,7 +163,7 @@ app.post('/verify-otp', async (req, res) => {
       const hashedPassword = await bcrypt.hash(password, salt);
 
       // Create user in the database
-      const user = await User.create({ username, email, password: hashedPassword });
+      const user = await testuser.create({ username, email, password: hashedPassword });
 
       // OTP is valid, clear OTP after successful verification
       delete otps[email];
