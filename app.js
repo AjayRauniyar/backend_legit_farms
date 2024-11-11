@@ -159,12 +159,10 @@ app.post('/verify-otp', async (req, res) => {
   if (String(otpData.otp) === String(otp)) {
     // OTP is valid, create user in the database
     try {
-      // Hash the password before storing it
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
+     
 
       // Create user in the database
-      const user = await testuser.create({ username, email, password: hashedPassword });
+      const user = await testuser.create({ username, email, password: password });
 
       // OTP is valid, clear OTP after successful verification
       delete otps[email];
@@ -182,35 +180,17 @@ app.post('/verify-otp', async (req, res) => {
 // Login Route
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
-
   try {
-    // Find the user by username
     const user = await testuser.findOne({ where: { username } });
-
-    // If user is found and password is valid
-    if (user) {
-      // Compare the provided password with the hashed password in the database
-      const isValidPassword = await bcrypt.compare(password, user.password);
-      
-      if (isValidPassword) {
-        // If password is correct, generate a token
-        const token = generateToken(user);
-
-        return res.status(200).json({
-          message: 'Login successful',
-          token, // Return the token
-        });
-      } else {
-        // Invalid password
-        return res.status(400).json({ message: 'Invalid username or password' });
-      }
+    if (user && await user.validPassword(password)) {
+      const token = generateToken(user);
+      res.status(200).json({ message: 'Login successful', token });
     } else {
-      // User not found
-      return res.status(400).json({ message: 'Invalid username or password' });
+      res.status(400).json({ message: 'Invalid username or password' });
     }
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: 'Error during login', error });
+    res.status(500).json({ message: 'Error during login', error });
   }
 });
 
