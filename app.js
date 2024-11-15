@@ -196,6 +196,35 @@ app.post('/login', async (req, res) => {
 
 
 
+// Change Password Route
+app.post('/change-password', async (req, res) => {
+  const { username, currentPassword, newPassword } = req.body;
+
+  try {
+    // Fetch the user by username
+    const user = await testuser.findOne({ where: { username } });
+
+    // Check if the user exists and if the current password matches
+    if (user && await user.validPassword(currentPassword)) {
+      // Hash the new password
+    
+
+      // Update the user's password in the database
+      await user.update({ password: newPassword });
+
+      res.status(200).json({ message: 'Password changed successfully' });
+    } else {
+      res.status(400).json({ message: 'Invalid current password or user not found' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error changing password', error });
+  }
+});
+
+
+
+
 
 
 
