@@ -222,6 +222,9 @@ app.post('/change-password', async (req, res) => {
   }
 });
 
+
+
+
 // Route to request OTP
 app.post('/request-otp-password', async (req, res) => {
   const { email } = req.body;
@@ -235,6 +238,12 @@ app.post('/request-otp-password', async (req, res) => {
     return res.status(400).json({ message: 'Invalid email format' });
   }
 
+  // Check if the user already exists in the database
+  const existingUser = await testuser.findOne({ where: { email } });
+  if (!existingUser) {
+    return res.status(400).json({ message: 'User doesnot exists with this email' });
+  }
+  
   // Generate OTP (6-digit number)
   const otp = Math.floor(100000 + Math.random() * 900000); // OTP of 6 digits
 
@@ -244,11 +253,67 @@ app.post('/request-otp-password', async (req, res) => {
     timestamp: Date.now(),
   };
 
+  // Send the OTP email
+  const mailOptions = {
+    from: 'winningaj77@gmail.com',
+    to: email,
+    subject: 'Your OTP Code',
+    text: `Your OTP code is: ${otp}`,
+  };
 
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      return res.status(500).json({ message: 'Error sending OTP email', error });
+    }
+    res.status(200).json({ message: 'OTP sent successfully', email: email });
+  });
+});
 
+// Route to verify OTP and create a user in the database if OTP is valid
+app.post('/verify-otp-password', async (req, res) => {
+  const { email, otp} = req.body;
 
+  if (!email || !otp ) {
+    return res.status(400).json({ message: 'Email and OTP are required' });
+  }
+  
+   
 
+  
+  // Check if OTP exists for the email
+  if (!otps[email]) {
+    return res.status(400).json({ message: 'No OTP requested for this email' });
+  }
 
+  // Check if the OTP has expired (5 minutes expiry)
+  const otpData = otps[email];
+  const expirationTime = 5 * 60 * 1000; // 5 minutes in milliseconds
+  if (Date.now() - otpData.timestamp > expirationTime) {
+    delete otps[email]; // OTP expired
+    return res.status(400).json({ message: 'OTP expired' });
+  }
+
+  // Ensure OTP is compared correctly (convert both to strings)
+  if (String(otpData.otp) === String(otp)) {
+    // OTP is valid, create user in the database
+    try {
+     
+
+      // Create user in the database
+      const user = await testuser.create({ username, email, password: password });
+
+      // OTP is valid, clear OTP after successful verification
+      delete otps[email];
+
+      return res.status(200).json({ message: 'OTP verified and user created successfully', user });
+    } catch (error) {
+      return res.status(500).json({ message: 'Error creating user', error });
+    }
+  } else {
+    // OTP is invalid
+    return res.status(400).json({ message: 'Invalid OTP' });
+  }
+});
 
 
 
