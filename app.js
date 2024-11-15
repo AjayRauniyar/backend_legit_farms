@@ -129,8 +129,8 @@ app.post('/verify-otp', async (req, res) => {
   if (cachedOtp !== otp) return res.status(400).json({ message: 'Invalid OTP' });
 
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await testuser.create({ username, email, password: hashedPassword });
+
+    const user = await testuser.create({ username, email, password: password });
     otpCache.del(email); // Clear OTP after successful verification
     res.status(200).json({ message: 'OTP verified and user created successfully', user });
   } catch (error) {
