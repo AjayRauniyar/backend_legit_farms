@@ -268,22 +268,21 @@ app.post('/request-otp-password', async (req, res) => {
     res.status(200).json({ message: 'OTP sent successfully', email: email });
   });
 });
-
-// Route to verify OTP and create a user in the database if OTP is valid
 app.post('/verify-otp-password', async (req, res) => {
-  const { email, otp} = req.body;
+  const { email, otp } = req.body;
 
-  if (!email || !otp ) {
+  if (!email || !otp) {
     return res.status(400).json({ message: 'Email and OTP are required' });
   }
-  
-   
 
-  
   // Check if OTP exists for the email
   if (!otps[email]) {
     return res.status(400).json({ message: 'No OTP requested for this email' });
   }
+
+  // Log OTP from request and OTP from stored data to help with debugging
+  console.log(`OTP from user: ${otp}`);
+  console.log(`Stored OTP: ${otps[email].otp}`);
 
   // Check if the OTP has expired (5 minutes expiry)
   const otpData = otps[email];
@@ -295,16 +294,13 @@ app.post('/verify-otp-password', async (req, res) => {
 
   // Ensure OTP is compared correctly (convert both to strings)
   if (String(otpData.otp) === String(otp)) {
-    // OTP is valid, create user in the database
+    // OTP is valid, clear OTP after successful verification
+    delete otps[email];
+
+    // You can add your user creation code here, for example:
     try {
      
-
-      
-
-      // OTP is valid, clear OTP after successful verification
-      delete otps[email];
-
-      return res.status(200).json({ message: 'OTP verified and user created successfully', user });
+      return res.status(200).json({ message: 'OTP verified successfully' });
     } catch (error) {
       return res.status(500).json({ message: 'Error creating user', error });
     }
@@ -313,6 +309,7 @@ app.post('/verify-otp-password', async (req, res) => {
     return res.status(400).json({ message: 'Invalid OTP' });
   }
 });
+
 
 
 
