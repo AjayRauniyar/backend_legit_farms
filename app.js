@@ -198,14 +198,14 @@ app.post('/login', async (req, res) => {
 
 // Change Password Route
 app.post('/change-password', async (req, res) => {
-  const { username, currentPassword, newPassword } = req.body;
+  const { username, newPassword } = req.body;
 
   try {
     // Fetch the user by username
     const user = await testuser.findOne({ where: { username } });
 
     // Check if the user exists and if the current password matches
-    if (user && await user.validPassword(currentPassword)) {
+    if (user ) {
       // Hash the new password
     
 
