@@ -49,9 +49,9 @@ app.use(express.urlencoded({ extended: true }));
 
 
 
+const NodeCache = require('node-cache');
 
-
-
+const otpCache = new NodeCache({ stdTTL: 300 });
 
 
 
@@ -86,31 +86,16 @@ const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
 app.post('/request-otp', async (req, res) => {
   const { email } = req.body;
 
-  if (!email) {
-    return res.status(400).json({ message: 'Email is required' });
-  }
+  if (!email) return res.status(400).json({ message: 'Email is required' });
 
-  // Validate email format
-  if (!emailRegex.test(email)) {
-    return res.status(400).json({ message: 'Invalid email format' });
-  }
+  if (!emailRegex.test(email)) return res.status(400).json({ message: 'Invalid email format' });
 
-  // Check if the user already exists in the database
   const existingUser = await testuser.findOne({ where: { email } });
-  if (existingUser) {
-    return res.status(400).json({ message: 'User already exists with this email' });
-  }
-  
-  // Generate OTP (6-digit number)
-  const otp = Math.floor(100000 + Math.random() * 900000); // OTP of 6 digits
+  if (existingUser) return res.status(400).json({ message: 'User already exists with this email' });
 
-  // Save the OTP with email as key (you can add expiry time)
-  otps[email] = {
-    otp: otp,
-    timestamp: Date.now(),
-  };
+  const otp = String(Math.floor(100000 + Math.random() * 900000)); // Generate OTP as string
+  otpCache.set(email, otp);
 
-  // Send the OTP email
   const mailOptions = {
     from: 'winningaj77@gmail.com',
     to: email,
@@ -118,66 +103,40 @@ app.post('/request-otp', async (req, res) => {
     text: `Your OTP code is: ${otp}`,
   };
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      return res.status(500).json({ message: 'Error sending OTP email', error });
-    }
-    res.status(200).json({ message: 'OTP sent successfully', email: email });
+  transporter.sendMail(mailOptions, (error) => {
+    if (error) return res.status(500).json({ message: 'Error sending OTP email', error });
+    res.status(200).json({ message: 'OTP sent successfully' });
   });
 });
 
-// Route to verify OTP and create a user in the database if OTP is valid
+// Route to verify OTP
 app.post('/verify-otp', async (req, res) => {
   const { email, otp, username, password } = req.body;
 
   if (!email || !otp || !username || !password) {
     return res.status(400).json({ message: 'Email, OTP, username, and password are required' });
   }
-  
-  // Password strength validation
+
   if (!passwordStrengthRegex.test(password)) {
     return res.status(400).json({
       message: 'Password must be at least 8 characters long, contain one uppercase letter, one number, and one special character.',
     });
   }
 
-  // Check if OTP exists for the email
-  if (!otps[email]) {
-    return res.status(400).json({ message: 'No OTP requested for this email' });
-  }
+  const cachedOtp = otpCache.get(email);
+  if (!cachedOtp) return res.status(400).json({ message: 'OTP expired or not requested' });
 
-  // Check if the OTP has expired (5 minutes expiry)
-  const otpData = otps[email];
-  const expirationTime = 5 * 60 * 1000; // 5 minutes in milliseconds
-  if (Date.now() - otpData.timestamp > expirationTime) {
-    delete otps[email]; // OTP expired
-    return res.status(400).json({ message: 'OTP expired' });
-  }
+  if (cachedOtp !== otp) return res.status(400).json({ message: 'Invalid OTP' });
 
-  // Logging for debugging
-  console.log(`Received OTP: ${otp}`);
-  console.log(`Stored OTP: ${otpData.otp}`);
-  
-  // Ensure OTP is compared correctly (convert both to strings)
-  if (String(otpData.otp) === String(otp)) {
-    // OTP is valid, create user in the database
-    try {
-      // Create user in the database
-      const user = await testuser.create({ username, email, password: password });
-
-      // OTP is valid, clear OTP after successful verification
-      delete otps[email];
-
-      return res.status(200).json({ message: 'OTP verified and user created successfully', user });
-    } catch (error) {
-      return res.status(500).json({ message: 'Error creating user', error });
-    }
-  } else {
-    // OTP is invalid
-    return res.status(400).json({ message: 'Invalid OTP' });
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await testuser.create({ username, email, password: hashedPassword });
+    otpCache.del(email); // Clear OTP after successful verification
+    res.status(200).json({ message: 'OTP verified and user created successfully', user });
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating user', error });
   }
 });
-
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   try {
