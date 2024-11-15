@@ -299,8 +299,7 @@ app.post('/verify-otp-password', async (req, res) => {
     try {
      
 
-      // Create user in the database
-      const user = await testuser.create({ username, email, password: password });
+      
 
       // OTP is valid, clear OTP after successful verification
       delete otps[email];
