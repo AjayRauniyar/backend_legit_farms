@@ -177,20 +177,29 @@ app.post('/verify-otp', async (req, res) => {
   }
 });
 
-// Login Route
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   try {
+    // Step 1: Find user by username
     const user = await testuser.findOne({ where: { username } });
-    if (user && await user.validPassword(password)) {
+    if (!user) {
+      console.error('User not found for username:', username);
+      return res.status(400).json({ message: 'Invalid username or password' });
+    }
+
+    // Step 2: Validate the password
+    const isPasswordValid = await user.validPassword(password);
+    if (isPasswordValid) {
+      // Step 3: Generate token
       const token = generateToken(user);
-      res.status(200).json({ message: 'Login successful', token });
+      return res.status(200).json({ message: 'Login successful', token });
     } else {
-      res.status(400).json({ message: 'Invalid username or password' });
+      console.error('Invalid password for user:', username);
+      return res.status(400).json({ message: 'Invalid username or password' });
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error during login', error });
+    console.error('Error during login:', error);
+    return res.status(500).json({ message: 'Error during login', error });
   }
 });
 
