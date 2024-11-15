@@ -222,7 +222,27 @@ app.post('/change-password', async (req, res) => {
   }
 });
 
+// Route to request OTP
+app.post('/request-otp-password', async (req, res) => {
+  const { email } = req.body;
 
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required' });
+  }
+
+  // Validate email format
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: 'Invalid email format' });
+  }
+
+  // Generate OTP (6-digit number)
+  const otp = Math.floor(100000 + Math.random() * 900000); // OTP of 6 digits
+
+  // Save the OTP with email as key (you can add expiry time)
+  otps[email] = {
+    otp: otp,
+    timestamp: Date.now(),
+  };
 
 
 
