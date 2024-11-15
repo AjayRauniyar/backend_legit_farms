@@ -134,14 +134,13 @@ app.post('/verify-otp', async (req, res) => {
     return res.status(400).json({ message: 'Email, OTP, username, and password are required' });
   }
   
-   // Password strength validation
-   if (!passwordStrengthRegex.test(password)) {
+  // Password strength validation
+  if (!passwordStrengthRegex.test(password)) {
     return res.status(400).json({
       message: 'Password must be at least 8 characters long, contain one uppercase letter, one number, and one special character.',
     });
   }
 
-  
   // Check if OTP exists for the email
   if (!otps[email]) {
     return res.status(400).json({ message: 'No OTP requested for this email' });
@@ -155,12 +154,14 @@ app.post('/verify-otp', async (req, res) => {
     return res.status(400).json({ message: 'OTP expired' });
   }
 
+  // Logging for debugging
+  console.log(`Received OTP: ${otp}`);
+  console.log(`Stored OTP: ${otpData.otp}`);
+  
   // Ensure OTP is compared correctly (convert both to strings)
   if (String(otpData.otp) === String(otp)) {
     // OTP is valid, create user in the database
     try {
-     
-
       // Create user in the database
       const user = await testuser.create({ username, email, password: password });
 
